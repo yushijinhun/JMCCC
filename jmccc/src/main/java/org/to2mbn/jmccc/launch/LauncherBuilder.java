@@ -25,8 +25,9 @@ public class LauncherBuilder {
 		return new LauncherBuilder().build();
 	}
 
-	private boolean nativeFastCheck = false;
-	private boolean debugPrintCommandline = false;
+	protected boolean nativeFastCheck = false;
+	protected boolean debugPrintCommandline = false;
+	protected boolean launchInCurrentJVM = false;
 
 	protected LauncherBuilder() {
 	}
@@ -75,16 +76,36 @@ public class LauncherBuilder {
 	}
 
 	/**
+	 * Sets whether to launch minecraft in the current jvm.
+	 * <p>
+	 * If this option is on, jmccc will invoke the 'main' method of minecraft in
+	 * the current jvm, instead of starting a new process.
+	 * 
+	 * @param launchInCurrentJVM whether to launch minecraft in the current jvm
+	 * @return the builder itself
+	 */
+	public LauncherBuilder setLaunchInCurrentJVM(boolean launchInCurrentJVM) {
+		this.launchInCurrentJVM = launchInCurrentJVM;
+		return this;
+	}
+
+	/**
 	 * Creates a new <code>Launcher</code> instance according to the
 	 * configurations.
 	 * 
 	 * @return a <code>Launcher</code> instance
 	 */
 	public Launcher build() {
-		ProcessLauncher launcher = new ProcessLauncher();
-		launcher.setNativeFastCheck(nativeFastCheck);
-		launcher.setDebugPrintCommandline(debugPrintCommandline);
-		return launcher;
+		if (launchInCurrentJVM) {
+			ClassloadingLauncher launcher = new ClassloadingLauncher();
+			launcher.setNativeFastCheck(nativeFastCheck);
+			return launcher;
+		} else {
+			ProcessLauncher launcher = new ProcessLauncher();
+			launcher.setNativeFastCheck(nativeFastCheck);
+			launcher.setDebugPrintCommandline(debugPrintCommandline);
+			return launcher;
+		}
 	}
 
 }

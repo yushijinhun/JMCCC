@@ -105,7 +105,7 @@ public class LaunchArgument {
 		return args.toArray(new String[args.size()]);
 	}
 
-	private List<String> getFormattedMinecraftArguments() {
+	public List<String> getFormattedMinecraftArguments() {
 		Map<String, String> variables = new HashMap<>();
 		variables.putAll(defaultVariables);
 		variables.putAll(launchOption.getCommandlineVariables());
@@ -133,6 +133,11 @@ public class LaunchArgument {
 
 	public Map<String, String> getTokens() {
 		return defaultVariables;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("LaunchArgument [launchOption=%s, nativesPath=%s, libraries=%s, defaultVariables=%s]", launchOption, nativesPath, libraries, defaultVariables);
 	}
 
 }
