@@ -6,7 +6,7 @@ package org.to2mbn.jmccc.launch.classloading;
  * 
  * @author yushijinhun
  */
-public class ExitInterceptionException extends SecurityException {
+class ExitInterceptionException extends SecurityException {
 
 	private static final long serialVersionUID = 1L;
 

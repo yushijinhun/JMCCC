@@ -4,7 +4,7 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-public class MinecraftClassLoader extends URLClassLoader {
+class MinecraftClassLoader extends URLClassLoader {
 
 	private File nativesDir;
 

@@ -27,6 +27,22 @@ public class ClassloadingLauncher extends AbstractLauncher {
 	private boolean stopThreads;
 	private boolean useInternalStop;
 
+	public boolean isStopThreads() {
+		return stopThreads;
+	}
+
+	public void setStopThreads(boolean stopThreads) {
+		this.stopThreads = stopThreads;
+	}
+
+	public boolean isUseInternalStop() {
+		return useInternalStop;
+	}
+
+	public void setUseInternalStop(boolean useInternalStop) {
+		this.useInternalStop = useInternalStop;
+	}
+
 	@Override
 	protected LaunchResult doLaunch(LaunchArgument arg, GameProcessListener listener) throws LaunchException {
 		try {
