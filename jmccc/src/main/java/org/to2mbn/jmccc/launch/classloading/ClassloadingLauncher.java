@@ -1,4 +1,4 @@
-package org.to2mbn.jmccc.launch;
+package org.to2mbn.jmccc.launch.classloading;
 
 import java.io.CharArrayWriter;
 import java.io.File;
@@ -6,9 +6,14 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.to2mbn.jmccc.exec.GameProcessListener;
+import org.to2mbn.jmccc.launch.AbstractLauncher;
+import org.to2mbn.jmccc.launch.LaunchArgument;
+import org.to2mbn.jmccc.launch.LaunchException;
+import org.to2mbn.jmccc.launch.LaunchResult;
 
 /**
  * Launches Minecraft by invoking 'main()' in the current jvm.
@@ -19,28 +24,8 @@ public class ClassloadingLauncher extends AbstractLauncher {
 
 	private static final AtomicInteger threadGroupCounter = new AtomicInteger();
 
-	private static class NativesClassLoader extends URLClassLoader {
-
-		private File nativesDir;
-
-		public NativesClassLoader(URL[] urls, File nativesDir) {
-			super(urls);
-			this.nativesDir = nativesDir;
-		}
-
-		@Override
-		protected String findLibrary(String libname) {
-			String filename = System.mapLibraryName(libname);
-			if (filename != null) {
-				File file = new File(nativesDir, filename);
-				if (file.isFile()) {
-					return file.getAbsolutePath();
-				}
-			}
-			return super.findLibrary(libname);
-		}
-
-	}
+	private boolean stopThreads;
+	private boolean useInternalStop;
 
 	@Override
 	protected LaunchResult doLaunch(LaunchArgument arg, GameProcessListener listener) throws LaunchException {
@@ -51,7 +36,7 @@ public class ClassloadingLauncher extends AbstractLauncher {
 				classpath[i++] = file.toURI().toURL();
 			}
 
-			ClassLoader cl = new NativesClassLoader(classpath, arg.getNativesPath());
+			ClassLoader cl = new MinecraftClassLoader(classpath, arg.getNativesPath());
 			Method mainMethod = cl.loadClass(arg.getLaunchOption().getVersion().getMainClass())
 					.getMethod("main", String[].class);
 			String[] args = arg.getFormattedMinecraftArguments().toArray(new String[0]);
@@ -59,18 +44,23 @@ public class ClassloadingLauncher extends AbstractLauncher {
 			int idx = threadGroupCounter.getAndIncrement();
 			ThreadGroup targetGroup = new ThreadGroup("launch-target-" + idx);
 			Thread targetThread = new Thread(targetGroup, () -> {
+
 				boolean exitedNormally = false;
 				try {
 					invokeMain(cl, mainMethod, args);
 					exitedNormally = true;
 				} catch (Throwable e) {
-					for (String log : generateLaunchErrorLog(cl, arg, e, Thread.currentThread())) {
-						if (listener != null) {
-							listener.onErrorLog(log);
+					if (e instanceof InvocationTargetException && e.getCause() instanceof ExitInterceptionException) {
+						listener.onExit(((ExitInterceptionException) e.getCause()).getExitCode());
+					} else {
+						for (String log : generateLaunchErrorLog(cl, arg, e, Thread.currentThread())) {
+							if (listener != null) {
+								listener.onErrorLog(log);
+							}
 						}
-					}
-					if (listener != null) {
-						listener.onExit(1);
+						if (listener != null) {
+							listener.onExit(-1);
+						}
 					}
 				}
 				if (exitedNormally) {
@@ -78,6 +68,9 @@ public class ClassloadingLauncher extends AbstractLauncher {
 						listener.onExit(0);
 					}
 				}
+
+				cleanupThreads(targetGroup, cl);
+
 			}, "launch-target-main-" + idx);
 			targetThread.start();
 		} catch (Throwable e) {
@@ -115,6 +108,80 @@ public class ClassloadingLauncher extends AbstractLauncher {
 		CharArrayWriter buf = new CharArrayWriter();
 		e.printStackTrace(new PrintWriter(buf));
 		return buf.toString();
+	}
+
+	@SuppressWarnings("deprecation")
+	private void cleanupThreads(ThreadGroup group, ClassLoader ctxCl) {
+		Thread cleaner = new Thread(null, () -> {
+			Thread.currentThread().setContextClassLoader(null);
+			group.setDaemon(true);
+
+			filterThreads(group, ctxCl).forEach(Thread::interrupt);
+
+			Thread.interrupted();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}
+
+			if (stopThreads) {
+				if (useInternalStop) {
+					// if the threads didn't go dying, let's help them
+					try {
+						Method stop0 = Thread.class.getDeclaredMethod("stop0", Object.class);
+						stop0.setAccessible(true);
+
+						for (Thread t : filterThreads(group, ctxCl)) {
+							if (t.isAlive()) {
+								t.resume();
+								try {
+									stop0.invoke(t, new SuperThreadDeath());
+								} catch (Throwable e) {
+								}
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					for (Thread t : filterThreads(group, ctxCl)) {
+						if (t.isAlive()) {
+							try {
+								t.stop();
+							} catch (Throwable e) {
+							}
+						}
+					}
+				}
+			}
+
+		}, "thread-killer[" + group.getName() + "]");
+		cleaner.setPriority(Thread.MAX_PRIORITY);
+		cleaner.setDaemon(true);
+		cleaner.start();
+	}
+
+	private List<Thread> filterThreads(ThreadGroup group, ClassLoader ctxCl) {
+		Thread[] allThreads = new Thread[Thread.activeCount()];
+		Thread.enumerate(allThreads);
+		List<Thread> threads = new ArrayList<>();
+		for (Thread t : allThreads) {
+			boolean matches = false;
+			if (t.getContextClassLoader() == ctxCl) {
+				matches = true;
+			} else {
+				for (ThreadGroup g = t.getThreadGroup(); g != null; g = g.getParent()) {
+					if (g == group) {
+						matches = true;
+						break;
+					}
+				}
+			}
+			if (matches) {
+				threads.add(t);
+			}
+		}
+		return threads;
 	}
 
 }

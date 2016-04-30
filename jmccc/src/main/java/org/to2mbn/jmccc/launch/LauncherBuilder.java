@@ -1,5 +1,7 @@
 package org.to2mbn.jmccc.launch;
 
+import org.to2mbn.jmccc.launch.classloading.ClassloadingLauncher;
+
 /**
  * Builder for {@link Launcher}.
  * 
