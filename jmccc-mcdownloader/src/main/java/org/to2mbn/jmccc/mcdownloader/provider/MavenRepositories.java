@@ -7,7 +7,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import org.to2mbn.jmccc.mcdownloader.download.cache.CacheNames;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.MemoryDownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.ResultProcessor;
 import org.w3c.dom.Document;
@@ -16,12 +16,12 @@ import org.xml.sax.SAXException;
 
 public final class MavenRepositories {
 
-	public static CombinedDownloadTask<String> snapshotPostfix(String groupId, String artifactId, String version, String repo) {
+	public static CombinedTask<String> snapshotPostfix(String groupId, String artifactId, String version, String repo) {
 		if (!version.endsWith("-SNAPSHOT")) {
 			throw new IllegalArgumentException("Not a snapshot version: " + version);
 		}
 		final String url = repo + groupId.replace('.', '/') + '/' + artifactId + '/' + version + "/maven-metadata.xml";
-		return CombinedDownloadTask.single(
+		return CombinedTask.single(
 				new MemoryDownloadTask(url)
 						.cacheable()
 						.cachePool(CacheNames.M2_METADATA))

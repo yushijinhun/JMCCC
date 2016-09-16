@@ -3,7 +3,7 @@ package org.to2mbn.jmccc.mcdownloader.download.concurrent;
 import java.util.Objects;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 
-class AdaptedCallback<V> implements Callback<V>, DownloadCallback<V>, CombinedDownloadCallback<V> {
+class AdaptedCallback<V> implements Callback<V>, DownloadCallback<V>, CombinedCallback<V> {
 
 	private final Callback<V> adapted;
 
@@ -28,7 +28,7 @@ class AdaptedCallback<V> implements Callback<V>, DownloadCallback<V>, CombinedDo
 	}
 
 	@Override
-	public <R> DownloadCallback<R> taskStart(DownloadTask<R> task) {
+	public <R> DownloadCallback<R> downloadStart(DownloadTask<R> task) {
 		return null;
 	}
 

@@ -2,8 +2,8 @@ package org.to2mbn.jmccc.mcdownloader.test;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask.CacheStrategy;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask.CacheStrategy;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.MemoryDownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.ResultProcessor;
@@ -38,13 +38,13 @@ public class DownloadDecoratorTest {
 
 	@Test
 	public void testCombinedTask() {
-		CombinedDownloadTask<?> task = CombinedDownloadTask.single(new MemoryDownloadTask("http://test/uri"));
+		CombinedTask<?> task = CombinedTask.single(new MemoryDownloadTask("http://test/uri"));
 
-		CombinedDownloadTask<?> proxied1 = task.cacheable(CacheStrategy.FORCIBLY_CACHE);
+		CombinedTask<?> proxied1 = task.cacheable(CacheStrategy.FORCIBLY_CACHE);
 		assertEquals(CacheStrategy.FORCIBLY_CACHE, proxied1.getCacheStrategy());
 		assertEquals(task.getCachePool(), proxied1.getCachePool());
 
-		CombinedDownloadTask<?> proxied2 = proxied1.cachePool("cache.pool.test");
+		CombinedTask<?> proxied2 = proxied1.cachePool("cache.pool.test");
 		assertEquals("cache.pool.test", proxied2.getCachePool());
 		assertEquals(proxied1.getCacheStrategy(), proxied2.getCacheStrategy());
 	}

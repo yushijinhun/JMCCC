@@ -4,15 +4,15 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.Callback;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallback;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallback;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.DownloadCallback;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 
-public class CombinedDownloadContextDecorator<T> implements CombinedDownloadContext<T> {
+public class DownloadContextDecorator<T> implements DownloadContext<T> {
 
-	protected final CombinedDownloadContext<T> delegated;
+	protected final DownloadContext<T> delegated;
 
-	public CombinedDownloadContextDecorator(CombinedDownloadContext<T> delegated) {
+	public DownloadContextDecorator(DownloadContext<T> delegated) {
 		this.delegated = Objects.requireNonNull(delegated);
 	}
 
@@ -42,7 +42,7 @@ public class CombinedDownloadContextDecorator<T> implements CombinedDownloadCont
 	}
 
 	@Override
-	public <R> Future<R> submit(CombinedDownloadTask<R> task, CombinedDownloadCallback<R> callback, boolean fatal) throws InterruptedException {
+	public <R> Future<R> submit(CombinedTask<R> task, CombinedCallback<R> callback, boolean fatal) throws InterruptedException {
 		return delegated.submit(task, callback, fatal);
 	}
 

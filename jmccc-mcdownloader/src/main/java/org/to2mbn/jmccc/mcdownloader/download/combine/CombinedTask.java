@@ -12,7 +12,7 @@ import org.to2mbn.jmccc.mcdownloader.download.tasks.ResultProcessor;
  * @author yushijinhun
  * @see DownloadTask
  */
-abstract public class CombinedDownloadTask<T> {
+abstract public class CombinedTask<T> {
 
 	public static enum CacheStrategy {
 		DEFAULT, FORCIBLY_CACHE, CACHEABLE, NON_CACHEABLE;
@@ -26,31 +26,31 @@ abstract public class CombinedDownloadTask<T> {
 	 * @return the CombinedDownloadTask
 	 * @throws NullPointerException if <code>task == null</code>
 	 */
-	public static <T> CombinedDownloadTask<T> single(DownloadTask<T> task) {
+	public static <T> CombinedTask<T> single(DownloadTask<T> task) {
 		Objects.requireNonNull(task);
 		return new SingleCombinedTask<T>(task);
 	}
 
-	public static CombinedDownloadTask<Void> multiple(DownloadTask<?>... tasks) {
+	public static CombinedTask<Void> multiple(DownloadTask<?>... tasks) {
 		Objects.requireNonNull(tasks);
-		CombinedDownloadTask<?>[] combinedTasks = new CombinedDownloadTask<?>[tasks.length];
+		CombinedTask<?>[] combinedTasks = new CombinedTask<?>[tasks.length];
 		for (int i = 0; i < tasks.length; i++) {
 			combinedTasks[i] = single(tasks[i]);
 		}
 		return multiple(combinedTasks);
 	}
 
-	public static CombinedDownloadTask<Void> multiple(CombinedDownloadTask<?>... tasks) {
+	public static CombinedTask<Void> multiple(CombinedTask<?>... tasks) {
 		Objects.requireNonNull(tasks);
 		return new MultipleCombinedTask(tasks);
 	}
 
 	@SafeVarargs
-	public static <T> CombinedDownloadTask<T> any(DownloadTask<T>... tasks) {
+	public static <T> CombinedTask<T> any(DownloadTask<T>... tasks) {
 		Objects.requireNonNull(tasks);
 
 		@SuppressWarnings("unchecked")
-		CombinedDownloadTask<T>[] combinedTasks = new CombinedDownloadTask[tasks.length];
+		CombinedTask<T>[] combinedTasks = new CombinedTask[tasks.length];
 		for (int i = 0; i < tasks.length; i++) {
 			combinedTasks[i] = single(tasks[i]);
 		}
@@ -59,13 +59,13 @@ abstract public class CombinedDownloadTask<T> {
 
 	@SuppressWarnings("unchecked")
 	@SafeVarargs
-	public static <T> CombinedDownloadTask<T> any(CombinedDownloadTask<T>... tasks) {
+	public static <T> CombinedTask<T> any(CombinedTask<T>... tasks) {
 		Objects.requireNonNull(tasks);
 		return any(new Class[] { IOException.class }, tasks);
 	}
 
 	@SafeVarargs
-	public static <T> CombinedDownloadTask<T> any(Class<? extends Throwable>[] expectedExceptions, CombinedDownloadTask<T>... tasks) {
+	public static <T> CombinedTask<T> any(Class<? extends Throwable>[] expectedExceptions, CombinedTask<T>... tasks) {
 		Objects.requireNonNull(tasks);
 		Objects.requireNonNull(expectedExceptions);
 		if (tasks.length == 0) {
@@ -74,7 +74,7 @@ abstract public class CombinedDownloadTask<T> {
 		return new AnyCombinedTask<>(tasks, expectedExceptions);
 	}
 
-	abstract public void execute(CombinedDownloadContext<T> context) throws Exception;
+	abstract public void execute(DownloadContext<T> context) throws Exception;
 
 	public CacheStrategy getCacheStrategy() {
 		return CacheStrategy.DEFAULT;
@@ -84,7 +84,7 @@ abstract public class CombinedDownloadTask<T> {
 		return null;
 	}
 
-	public final CombinedDownloadTask<T> cacheable(CacheStrategy strategy) {
+	public final CombinedTask<T> cacheable(CacheStrategy strategy) {
 		Objects.requireNonNull(strategy);
 		if (getCacheStrategy() == strategy) {
 			return this;
@@ -92,22 +92,22 @@ abstract public class CombinedDownloadTask<T> {
 		return new CombinedTaskCacheStrategyDecorator<>(this, strategy);
 	}
 
-	public final CombinedDownloadTask<T> cachePool(String pool) {
+	public final CombinedTask<T> cachePool(String pool) {
 		if (Objects.equals(getCachePool(), pool)) {
 			return this;
 		}
 		return new CombinedTaskCachePoolDecorator<>(this, pool);
 	}
 
-	public final <R> CombinedDownloadTask<R> andThen(ResultProcessor<T, R> processor) {
+	public final <R> CombinedTask<R> andThen(ResultProcessor<T, R> processor) {
 		return new AndThenCombinedTask<>(this, processor);
 	}
 
-	public final <R> CombinedDownloadTask<R> andThenDownload(ResultProcessor<T, CombinedDownloadTask<R>> then) {
+	public final <R> CombinedTask<R> andThenDownload(ResultProcessor<T, CombinedTask<R>> then) {
 		return new AndThenDownloadCombinedTask<>(this, then);
 	}
 
-	public final <R> CombinedDownloadTask<R> andThenReturn(final R result) {
+	public final <R> CombinedTask<R> andThenReturn(final R result) {
 		return andThen(new ResultProcessor<T, R>() {
 
 			@Override

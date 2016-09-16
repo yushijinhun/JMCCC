@@ -24,15 +24,15 @@ import org.to2mbn.jmccc.mcdownloader.download.concurrent.CallbackAdapter;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.CallbackAsyncTask;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.CallbackFutureTask;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.Callbacks;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallback;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallbacks;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallback;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallbacks;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.DownloadCallback;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.DownloadCallbacks;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 
 class CombinedDownloaderImpl implements CombinedDownloader {
 
-	private class CombinedAsyncTask<T> extends CallbackAsyncTask<T> implements CombinedDownloadContext<T> {
+	private class CombinedAsyncTask<T> extends CallbackAsyncTask<T> implements DownloadContext<T> {
 
 		private class ExceptionCatcher implements InvocationHandler {
 
@@ -136,19 +136,19 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 		private class SubDownloadTaskMapper<R> extends CallbackAdapter<R> {
 
 			@Override
-			public <S> DownloadCallback<S> taskStart(DownloadTask<S> subtask) {
-				return callback.taskStart(subtask);
+			public <S> DownloadCallback<S> downloadStart(DownloadTask<S> subtask) {
+				return callback.downloadStart(subtask);
 			}
 
 		}
 
-		private final CombinedDownloadTask<T> task;
-		private final CombinedDownloadCallback<T> callback;
+		private final CombinedTask<T> task;
+		private final CombinedCallback<T> callback;
 		private final int tries;
 		private final SubtaskCountdownAction countdownAction = new SubtaskCountdownAction();
 		private final SubtaskCounter subtaskCounter = new SubtaskCounter();
 
-		public CombinedAsyncTask(CombinedDownloadTask<T> task, CombinedDownloadCallback<T> callback, int tries) {
+		public CombinedAsyncTask(CombinedTask<T> task, CombinedCallback<T> callback, int tries) {
 			Objects.requireNonNull(task);
 			Objects.requireNonNull(callback);
 			if (tries < 1)
@@ -206,7 +206,7 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 			if (injectedCallback != null)
 				callbacks.add(wrapDownloadCallback(injectedCallback));
 
-			DownloadCallback<R> foreignCallback = callback.taskStart(task);
+			DownloadCallback<R> foreignCallback = callback.downloadStart(task);
 			if (foreignCallback != null)
 				callbacks.add(wrapDownloadCallback(foreignCallback));
 
@@ -233,13 +233,13 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 		}
 
 		@Override
-		public <R> Future<R> submit(CombinedDownloadTask<R> task, CombinedDownloadCallback<R> injectedCallback, boolean fatal) throws InterruptedException {
+		public <R> Future<R> submit(CombinedTask<R> task, CombinedCallback<R> injectedCallback, boolean fatal) throws InterruptedException {
 			Objects.requireNonNull(task);
 
-			List<CombinedDownloadCallback<R>> callbacks = new ArrayList<>();
+			List<CombinedCallback<R>> callbacks = new ArrayList<>();
 
 			FutureManager<R> futureManager = createFutureManager();
-			callbacks.add(wrapCombinedDownloadCallback(CombinedDownloadCallbacks.fromCallback(futureManager)));
+			callbacks.add(wrapCombinedDownloadCallback(CombinedCallbacks.fromCallback(futureManager)));
 
 			if (injectedCallback != null)
 				callbacks.add(wrapCombinedDownloadCallback(injectedCallback));
@@ -247,9 +247,9 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 			callbacks.add(wrapCombinedDownloadCallback(new SubDownloadTaskMapper<R>()));
 
 			if (fatal)
-				callbacks.add(wrapCombinedDownloadCallback(CombinedDownloadCallbacks.fromCallback(new FatalSubtaskCallback<R>())));
+				callbacks.add(wrapCombinedDownloadCallback(CombinedCallbacks.fromCallback(new FatalSubtaskCallback<R>())));
 
-			callbacks.add(wrapCombinedDownloadCallback(CombinedDownloadCallbacks.<R> whatever(countdownAction)));
+			callbacks.add(wrapCombinedDownloadCallback(CombinedCallbacks.<R> whatever(countdownAction)));
 
 			Future<R> future;
 
@@ -259,7 +259,7 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 				checkInterrupted();
 
 				subtaskCounter.countUp();
-				future = CombinedDownloaderImpl.this.download(task, CombinedDownloadCallbacks.group(callbacks), tries);
+				future = CombinedDownloaderImpl.this.download(task, CombinedCallbacks.group(callbacks), tries);
 				futureManager.setFuture(future);
 			} finally {
 				lock.unlock();
@@ -314,8 +314,8 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 			return wrapExceptionHandler(DownloadCallback.class, callback);
 		}
 
-		private <R> CombinedDownloadCallback<R> wrapCombinedDownloadCallback(CombinedDownloadCallback<R> callback) {
-			return wrapExceptionHandler(CombinedDownloadCallback.class, callback);
+		private <R> CombinedCallback<R> wrapCombinedDownloadCallback(CombinedCallback<R> callback) {
+			return wrapExceptionHandler(CombinedCallback.class, callback);
 		}
 
 	}
@@ -356,12 +356,12 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 	}
 
 	@Override
-	public <T> Future<T> download(CombinedDownloadTask<T> downloadTask, CombinedDownloadCallback<T> callback, int tries) {
+	public <T> Future<T> download(CombinedTask<T> downloadTask, CombinedCallback<T> callback, int tries) {
 		Objects.requireNonNull(downloadTask);
 		if (tries < 1)
 			throw new IllegalArgumentException("tries < 1");
 
-		CombinedAsyncTask<T> task = new CombinedAsyncTask<>(downloadTask, callback == null ? CombinedDownloadCallbacks.<T> empty() : callback, tries);
+		CombinedAsyncTask<T> task = new CombinedAsyncTask<>(downloadTask, callback == null ? CombinedCallbacks.<T> empty() : callback, tries);
 		Callback<T> statusCallback = Callbacks.whatever(new TaskInactiver(task));
 		if (callback != null) {
 			statusCallback = Callbacks.group(statusCallback, callback);
@@ -406,7 +406,7 @@ class CombinedDownloaderImpl implements CombinedDownloader {
 	}
 
 	@Override
-	public <T> Future<T> download(CombinedDownloadTask<T> task, CombinedDownloadCallback<T> callback) {
+	public <T> Future<T> download(CombinedTask<T> task, CombinedCallback<T> callback) {
 		return download(task, callback, defaultTries);
 	}
 

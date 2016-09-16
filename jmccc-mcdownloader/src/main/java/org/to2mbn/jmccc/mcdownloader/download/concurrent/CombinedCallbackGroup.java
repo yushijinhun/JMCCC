@@ -4,23 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 
-class CombinedDownloadCallbackGroup<T> extends CallbackGroup<T> implements CombinedDownloadCallback<T> {
+class CombinedCallbackGroup<T> extends CallbackGroup<T> implements CombinedCallback<T> {
 
-	private CombinedDownloadCallback<T>[] callbacks;
+	private CombinedCallback<T>[] callbacks;
 
-	public CombinedDownloadCallbackGroup(CombinedDownloadCallback<T>[] callbacks) {
+	public CombinedCallbackGroup(CombinedCallback<T>[] callbacks) {
 		super(callbacks);
 		this.callbacks = callbacks;
 	}
 
 	@Override
-	public <R> DownloadCallback<R> taskStart(DownloadTask<R> task) {
+	public <R> DownloadCallback<R> downloadStart(DownloadTask<R> task) {
 		List<DownloadCallback<R>> listeners = new ArrayList<>();
 		EventDispatchException ex = null;
-		for (CombinedDownloadCallback<T> callback : callbacks) {
+		for (CombinedCallback<T> callback : callbacks) {
 			DownloadCallback<R> listener = null;
 			try {
-				listener = callback.taskStart(task);
+				listener = callback.downloadStart(task);
 			} catch (Throwable e) {
 				if (ex == null) {
 					ex = new EventDispatchException();

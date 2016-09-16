@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import org.to2mbn.jmccc.internal.org.json.JSONObject;
 import org.to2mbn.jmccc.mcdownloader.RemoteVersionList;
 import org.to2mbn.jmccc.mcdownloader.download.cache.CacheNames;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.FileDownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.MemoryDownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.ResultProcessor;
@@ -51,12 +51,12 @@ abstract public class URIDownloadProvider implements MinecraftDownloadProvider {
 	}
 
 	@Override
-	public CombinedDownloadTask<RemoteVersionList> versionList() {
+	public CombinedTask<RemoteVersionList> versionList() {
 		URI uri = getVersionList();
 		if (uri == null) {
 			return null;
 		}
-		return CombinedDownloadTask.single(
+		return CombinedTask.single(
 				new MemoryDownloadTask(uri)
 						.andThen(new JsonDecoder())
 						.andThen(new ResultProcessor<JSONObject, RemoteVersionList>() {
@@ -71,12 +71,12 @@ abstract public class URIDownloadProvider implements MinecraftDownloadProvider {
 	}
 
 	@Override
-	public CombinedDownloadTask<Set<Asset>> assetsIndex(final MinecraftDirectory mcdir, final Version version) {
+	public CombinedTask<Set<Asset>> assetsIndex(final MinecraftDirectory mcdir, final Version version) {
 		URI uri = getAssetIndex(version);
 		if (uri == null) {
 			return null;
 		}
-		return CombinedDownloadTask.single(
+		return CombinedTask.single(
 				new FileDownloadTask(uri, mcdir.getAssetIndex(version.getAssets()))
 						.andThen(new ResultProcessor<Void, Set<Asset>>() {
 
@@ -89,23 +89,23 @@ abstract public class URIDownloadProvider implements MinecraftDownloadProvider {
 	}
 
 	@Override
-	public CombinedDownloadTask<Void> gameJar(MinecraftDirectory mcdir, Version version) {
+	public CombinedTask<Void> gameJar(MinecraftDirectory mcdir, Version version) {
 		URI uri = getGameJar(version);
 		if (uri == null) {
 			return null;
 		}
-		return CombinedDownloadTask.single(
+		return CombinedTask.single(
 				new FileDownloadTask(uri, mcdir.getVersionJar(version))
 						.cachePool(CacheNames.GAME_JAR));
 	}
 
 	@Override
-	public CombinedDownloadTask<String> gameVersionJson(MinecraftDirectory mcdir, String version) {
+	public CombinedTask<String> gameVersionJson(MinecraftDirectory mcdir, String version) {
 		URI uri = getGameVersionJson(version);
 		if (uri == null) {
 			return null;
 		}
-		return CombinedDownloadTask.single(
+		return CombinedTask.single(
 				new FileDownloadTask(uri, mcdir.getVersionJson(version))
 						.cacheable()
 						.cachePool(CacheNames.VERSION_JSON))
@@ -113,7 +113,7 @@ abstract public class URIDownloadProvider implements MinecraftDownloadProvider {
 	}
 
 	@Override
-	public CombinedDownloadTask<Void> library(MinecraftDirectory mcdir, Library library) {
+	public CombinedTask<Void> library(MinecraftDirectory mcdir, Library library) {
 		URI uri = getLibrary(library);
 		if (uri == null) {
 			return null;
@@ -121,7 +121,7 @@ abstract public class URIDownloadProvider implements MinecraftDownloadProvider {
 		return library(mcdir, library, uri);
 	}
 
-	public CombinedDownloadTask<Void> library(MinecraftDirectory mcdir, Library library, URI uri) {
+	public CombinedTask<Void> library(MinecraftDirectory mcdir, Library library, URI uri) {
 		String path = uri.getPath();
 		LibraryDownloadHandler handler = null;
 		for (Entry<String, LibraryDownloadHandler> entry : libraryHandlers.entrySet()) {
@@ -134,18 +134,18 @@ abstract public class URIDownloadProvider implements MinecraftDownloadProvider {
 			throw new IllegalArgumentException("unable to resolve library download handler, path: " + path);
 		}
 
-		return CombinedDownloadTask.single(
+		return CombinedTask.single(
 				handler.createDownloadTask(mcdir.getLibrary(library), library, uri))
 				.cachePool(CacheNames.LIBRARY);
 	}
 
 	@Override
-	public CombinedDownloadTask<Void> asset(MinecraftDirectory mcdir, Asset asset) {
+	public CombinedTask<Void> asset(MinecraftDirectory mcdir, Asset asset) {
 		URI uri = getAsset(asset);
 		if (uri == null) {
 			return null;
 		}
-		return CombinedDownloadTask.single(
+		return CombinedTask.single(
 				new FileDownloadTask(uri, mcdir.getAsset(asset))
 						.cachePool(CacheNames.ASSET));
 	}

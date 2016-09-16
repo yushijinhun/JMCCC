@@ -3,7 +3,7 @@ package org.to2mbn.jmccc.mcdownloader;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloader;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallback;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallback;
 import org.to2mbn.jmccc.mcdownloader.provider.MinecraftDownloadProvider;
 import org.to2mbn.jmccc.option.MinecraftDirectory;
 import org.to2mbn.jmccc.version.Version;
@@ -24,7 +24,7 @@ public interface MinecraftDownloader extends CombinedDownloader {
 	 * @throws NullPointerException if <code>dir==null || version==null</code>
 	 * @throws RejectedExecutionException if the downloader has been shutdown
 	 */
-	Future<Version> downloadIncrementally(MinecraftDirectory dir, String version, CombinedDownloadCallback<Version> callback, MinecraftDownloadOption... options);
+	Future<Version> downloadIncrementally(MinecraftDirectory dir, String version, CombinedCallback<Version> callback, DownloadOption... options);
 
 	/**
 	 * Fetches the remote version list asynchronously.
@@ -34,7 +34,7 @@ public interface MinecraftDownloader extends CombinedDownloader {
 	 * @return future representing pending completion of the operation
 	 * @throws RejectedExecutionException if the downloader has been shutdown
 	 */
-	Future<RemoteVersionList> fetchRemoteVersionList(CombinedDownloadCallback<RemoteVersionList> callback, CacheOption... options);
+	Future<RemoteVersionList> fetchRemoteVersionList(CombinedCallback<RemoteVersionList> callback, CacheOption... options);
 
 	/**
 	 * Gets the provider of the {@code MinecraftDownloader}.

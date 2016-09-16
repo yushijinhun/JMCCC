@@ -1,6 +1,6 @@
 package org.to2mbn.jmccc.mcdownloader;
 
-public enum ChecksumOption implements MinecraftDownloadOption {
+public enum ChecksumOption implements DownloadOption {
 
 	/**
 	 * Verify the checksums of libraries (only available when the checksum is

@@ -3,7 +3,7 @@ package org.to2mbn.jmccc.mcdownloader.download.combine;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import org.to2mbn.jmccc.mcdownloader.download.Downloader;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallback;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallback;
 
 public interface CombinedDownloader extends Downloader {
 
@@ -17,7 +17,7 @@ public interface CombinedDownloader extends Downloader {
 	 * @throws NullPointerException if <code>task==null</code>
 	 * @throws RejectedExecutionException if the downloader has been shutdown
 	 */
-	<T> Future<T> download(CombinedDownloadTask<T> task, CombinedDownloadCallback<T> callback);
+	<T> Future<T> download(CombinedTask<T> task, CombinedCallback<T> callback);
 
 	/**
 	 * Submits a combined download task asynchronously.
@@ -31,6 +31,6 @@ public interface CombinedDownloader extends Downloader {
 	 * @throws IllegalArgumentException if <code>tries &lt; 1</code>
 	 * @throws RejectedExecutionException if the downloader has been shutdown
 	 */
-	<T> Future<T> download(CombinedDownloadTask<T> task, CombinedDownloadCallback<T> callback, int tries);
+	<T> Future<T> download(CombinedTask<T> task, CombinedCallback<T> callback, int tries);
 
 }

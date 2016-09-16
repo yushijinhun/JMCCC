@@ -1,15 +1,15 @@
 package org.to2mbn.jmccc.mcdownloader.download.combine;
 
 import java.util.concurrent.Future;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallback;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallback;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.DownloadCallback;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 
-class DownloadContextCachePoolDecorator<T> extends CombinedDownloadContextDecorator<T> {
+class DownloadContextCachePoolDecorator<T> extends DownloadContextDecorator<T> {
 
 	private String cachePool;
 
-	public DownloadContextCachePoolDecorator(CombinedDownloadContext<T> delegated, String cachePool) {
+	public DownloadContextCachePoolDecorator(DownloadContext<T> delegated, String cachePool) {
 		super(delegated);
 		this.cachePool = cachePool;
 	}
@@ -23,7 +23,7 @@ class DownloadContextCachePoolDecorator<T> extends CombinedDownloadContextDecora
 	}
 
 	@Override
-	public <R> Future<R> submit(CombinedDownloadTask<R> task, CombinedDownloadCallback<R> callback, boolean fatal) throws InterruptedException {
+	public <R> Future<R> submit(CombinedTask<R> task, CombinedCallback<R> callback, boolean fatal) throws InterruptedException {
 		if (task.getCachePool() == null) {
 			task = task.cachePool(cachePool);
 		}

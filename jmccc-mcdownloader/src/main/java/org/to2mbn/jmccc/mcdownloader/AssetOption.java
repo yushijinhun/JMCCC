@@ -1,6 +1,6 @@
 package org.to2mbn.jmccc.mcdownloader;
 
-public enum AssetOption implements MinecraftDownloadOption {
+public enum AssetOption implements DownloadOption {
 
 	/**
 	 * Skip downloading assets.

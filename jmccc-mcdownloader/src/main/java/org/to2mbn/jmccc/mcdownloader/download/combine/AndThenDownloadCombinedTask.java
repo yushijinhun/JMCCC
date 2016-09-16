@@ -4,18 +4,18 @@ import java.util.Objects;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.CallbackAdapter;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.ResultProcessor;
 
-class AndThenDownloadCombinedTask<R, S> extends CombinedDownloadTask<S> {
+class AndThenDownloadCombinedTask<R, S> extends CombinedTask<S> {
 
-	private final CombinedDownloadTask<R> prev;
-	private final ResultProcessor<R, CombinedDownloadTask<S>> next;
+	private final CombinedTask<R> prev;
+	private final ResultProcessor<R, CombinedTask<S>> next;
 
-	public AndThenDownloadCombinedTask(CombinedDownloadTask<R> prev, ResultProcessor<R, CombinedDownloadTask<S>> next) {
+	public AndThenDownloadCombinedTask(CombinedTask<R> prev, ResultProcessor<R, CombinedTask<S>> next) {
 		this.prev = Objects.requireNonNull(prev);
 		this.next = Objects.requireNonNull(next);
 	}
 
 	@Override
-	public void execute(final CombinedDownloadContext<S> context) throws Exception {
+	public void execute(final DownloadContext<S> context) throws Exception {
 		context.submit(prev, new CallbackAdapter<R>() {
 
 			@Override

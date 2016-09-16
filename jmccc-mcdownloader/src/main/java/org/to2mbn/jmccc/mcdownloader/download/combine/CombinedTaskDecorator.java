@@ -2,16 +2,16 @@ package org.to2mbn.jmccc.mcdownloader.download.combine;
 
 import java.util.Objects;
 
-public class CombinedDownloadTaskDecorator<T> extends CombinedDownloadTask<T> {
+public class CombinedTaskDecorator<T> extends CombinedTask<T> {
 
-	protected final CombinedDownloadTask<T> delegated;
+	protected final CombinedTask<T> delegated;
 
-	public CombinedDownloadTaskDecorator(CombinedDownloadTask<T> delegated) {
+	public CombinedTaskDecorator(CombinedTask<T> delegated) {
 		this.delegated = Objects.requireNonNull(delegated);
 	}
 
 	@Override
-	public void execute(CombinedDownloadContext<T> context) throws Exception {
+	public void execute(DownloadContext<T> context) throws Exception {
 		delegated.execute(context);
 	}
 

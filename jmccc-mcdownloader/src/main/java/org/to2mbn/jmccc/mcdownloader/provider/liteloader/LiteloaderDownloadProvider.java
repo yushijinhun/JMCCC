@@ -6,8 +6,8 @@ import java.util.Set;
 import org.to2mbn.jmccc.internal.org.json.JSONArray;
 import org.to2mbn.jmccc.internal.org.json.JSONObject;
 import org.to2mbn.jmccc.mcdownloader.download.cache.CacheNames;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadContext;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.DownloadContext;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.FileDownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.MemoryDownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.ResultProcessor;
@@ -48,8 +48,8 @@ public class LiteloaderDownloadProvider extends AbstractMinecraftDownloadProvide
 		this.source = Objects.requireNonNull(source);
 	}
 
-	public CombinedDownloadTask<LiteloaderVersionList> liteloaderVersionList() {
-		return CombinedDownloadTask.single(new MemoryDownloadTask(source.getLiteloaderManifestUrl())
+	public CombinedTask<LiteloaderVersionList> liteloaderVersionList() {
+		return CombinedTask.single(new MemoryDownloadTask(source.getLiteloaderManifestUrl())
 				.andThen(new JsonDecoder())
 				.andThen(new ResultProcessor<JSONObject, LiteloaderVersionList>() {
 
@@ -63,18 +63,18 @@ public class LiteloaderDownloadProvider extends AbstractMinecraftDownloadProvide
 	}
 
 	@Override
-	public CombinedDownloadTask<String> gameVersionJson(final MinecraftDirectory mcdir, String version) {
+	public CombinedTask<String> gameVersionJson(final MinecraftDirectory mcdir, String version) {
 		final ResolvedLiteloaderVersion liteloaderInfo = ResolvedLiteloaderVersion.resolve(version);
 		if (liteloaderInfo == null) {
 			return null;
 		}
 
 		return upstreamProvider.gameVersionJson(mcdir, liteloaderInfo.getSuperVersion())
-				.andThenDownload(new ResultProcessor<String, CombinedDownloadTask<LiteloaderVersion>>() {
+				.andThenDownload(new ResultProcessor<String, CombinedTask<LiteloaderVersion>>() {
 
 					// lookup LiteloaderVersion
 					@Override
-					public CombinedDownloadTask<LiteloaderVersion> process(final String superVersion) throws Exception {
+					public CombinedTask<LiteloaderVersion> process(final String superVersion) throws Exception {
 						return liteloaderVersionList()
 								.andThen(new ResultProcessor<LiteloaderVersionList, LiteloaderVersion>() {
 
@@ -94,11 +94,11 @@ public class LiteloaderDownloadProvider extends AbstractMinecraftDownloadProvide
 								});
 					}
 				})
-				.andThenDownload(new ResultProcessor<LiteloaderVersion, CombinedDownloadTask<String>>() {
+				.andThenDownload(new ResultProcessor<LiteloaderVersion, CombinedTask<String>>() {
 
 					// create version json
 					@Override
-					public CombinedDownloadTask<String> process(final LiteloaderVersion liteloader) throws Exception {
+					public CombinedTask<String> process(final LiteloaderVersion liteloader) throws Exception {
 						if (liteloader.getLiteloaderVersion().endsWith("-SNAPSHOT")) {
 							// it's a snapshot
 
@@ -114,10 +114,10 @@ public class LiteloaderDownloadProvider extends AbstractMinecraftDownloadProvide
 									.cachePool(CacheNames.LITELOADER_VERSION_JSON);
 						} else {
 							// it's a release
-							return new CombinedDownloadTask<String>() {
+							return new CombinedTask<String>() {
 
 								@Override
-								public void execute(CombinedDownloadContext<String> context) throws Exception {
+								public void execute(DownloadContext<String> context) throws Exception {
 									context.done(new VersionJsonInstaller(mcdir).process(createLiteloaderVersion(mcdir, liteloader)));
 								}
 							};
@@ -127,7 +127,7 @@ public class LiteloaderDownloadProvider extends AbstractMinecraftDownloadProvide
 	}
 
 	@Override
-	public CombinedDownloadTask<Void> library(final MinecraftDirectory mcdir, final Library library) {
+	public CombinedTask<Void> library(final MinecraftDirectory mcdir, final Library library) {
 		final String groupId = library.getGroupId();
 		final String artifactId = library.getArtifactId();
 		final String version = library.getVersion();
@@ -135,10 +135,10 @@ public class LiteloaderDownloadProvider extends AbstractMinecraftDownloadProvide
 		if (LITELOADER_GROUP_ID.equals(groupId) && LITELOADER_ARTIFACT_ID.equals(artifactId)) {
 			if (library.isSnapshotArtifact()) {
 				return liteloaderVersionList()
-						.andThenDownload(new ResultProcessor<LiteloaderVersionList, CombinedDownloadTask<Void>>() {
+						.andThenDownload(new ResultProcessor<LiteloaderVersionList, CombinedTask<Void>>() {
 
 							@Override
-							public CombinedDownloadTask<Void> process(LiteloaderVersionList versionList) throws Exception {
+							public CombinedTask<Void> process(LiteloaderVersionList versionList) throws Exception {
 								LiteloaderVersion liteloader = versionList.getSnapshot(
 										version.substring(0, version.length() - "-SNAPSHOT".length()) // the minecraft version
 								);
@@ -146,12 +146,12 @@ public class LiteloaderDownloadProvider extends AbstractMinecraftDownloadProvide
 									final String repo = liteloader.getRepoUrl();
 									if (repo != null) {
 										return MavenRepositories.snapshotPostfix(groupId, artifactId, version, repo)
-												.andThenDownload(new ResultProcessor<String, CombinedDownloadTask<Void>>() {
+												.andThenDownload(new ResultProcessor<String, CombinedTask<Void>>() {
 
 													@Override
-													public CombinedDownloadTask<Void> process(String postfix) throws Exception {
+													public CombinedTask<Void> process(String postfix) throws Exception {
 														Library libToDownload = new Library(groupId, artifactId, version, "release", library.getType());
-														return CombinedDownloadTask.single(
+														return CombinedTask.single(
 																new FileDownloadTask(repo + libToDownload.getPath(postfix), mcdir.getLibrary(library))
 																		.cacheable()
 																		.cachePool(CacheNames.LIBRARY));

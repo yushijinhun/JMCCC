@@ -9,7 +9,7 @@ import java.util.Set;
 import org.to2mbn.jmccc.mcdownloader.RemoteVersion;
 import org.to2mbn.jmccc.mcdownloader.RemoteVersionList;
 import org.to2mbn.jmccc.mcdownloader.download.cache.CacheNames;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.FileDownloadTask;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.ResultProcessor;
 import org.to2mbn.jmccc.option.MinecraftDirectory;
@@ -31,8 +31,8 @@ class DownloadInfoProvider extends AbstractMinecraftDownloadProvider implements 
 	}
 
 	@Override
-	public CombinedDownloadTask<Set<Asset>> assetsIndex(final MinecraftDirectory mcdir, final Version version) {
-		CombinedDownloadTask<Void> task = download(version.getAssetIndexDownloadInfo(), mcdir.getAssetIndex(version), CacheNames.ASSET_INDEX);
+	public CombinedTask<Set<Asset>> assetsIndex(final MinecraftDirectory mcdir, final Version version) {
+		CombinedTask<Void> task = download(version.getAssetIndexDownloadInfo(), mcdir.getAssetIndex(version), CacheNames.ASSET_INDEX);
 		if (task != null) {
 			return task
 					.andThen(new ResultProcessor<Void, Set<Asset>>() {
@@ -48,7 +48,7 @@ class DownloadInfoProvider extends AbstractMinecraftDownloadProvider implements 
 	}
 
 	@Override
-	public CombinedDownloadTask<Void> gameJar(MinecraftDirectory mcdir, Version version) {
+	public CombinedTask<Void> gameJar(MinecraftDirectory mcdir, Version version) {
 		Map<String, DownloadInfo> downloads = version.getDownloads();
 		if (downloads != null) {
 			return download(downloads.get("client"), mcdir.getVersionJar(version), CacheNames.GAME_JAR);
@@ -57,7 +57,7 @@ class DownloadInfoProvider extends AbstractMinecraftDownloadProvider implements 
 	}
 
 	@Override
-	public CombinedDownloadTask<Void> library(MinecraftDirectory mcdir, Library library) {
+	public CombinedTask<Void> library(MinecraftDirectory mcdir, Library library) {
 		LibraryInfo info = library.getDownloadInfo();
 		if (info != null) {
 			return download(info, mcdir.getLibrary(library), CacheNames.LIBRARY);
@@ -66,18 +66,18 @@ class DownloadInfoProvider extends AbstractMinecraftDownloadProvider implements 
 	}
 
 	@Override
-	public CombinedDownloadTask<String> gameVersionJson(final MinecraftDirectory mcdir, final String version) {
+	public CombinedTask<String> gameVersionJson(final MinecraftDirectory mcdir, final String version) {
 		if (upstreamProvider == null) {
 			return null;
 		} else {
 			return upstreamProvider.versionList()
-					.andThenDownload(new ResultProcessor<RemoteVersionList, CombinedDownloadTask<String>>() {
+					.andThenDownload(new ResultProcessor<RemoteVersionList, CombinedTask<String>>() {
 
 						@Override
-						public CombinedDownloadTask<String> process(RemoteVersionList result) throws Exception {
+						public CombinedTask<String> process(RemoteVersionList result) throws Exception {
 							final RemoteVersion remoteVersion = result.getVersions().get(version);
 							if (remoteVersion != null && remoteVersion.getUrl() != null) {
-								return CombinedDownloadTask.single(
+								return CombinedTask.single(
 										new FileDownloadTask(parseURI(remoteVersion.getUrl()), mcdir.getVersionJson(remoteVersion.getVersion()))
 												.cacheable()
 												.cachePool(CacheNames.VERSION_JSON))
@@ -95,11 +95,11 @@ class DownloadInfoProvider extends AbstractMinecraftDownloadProvider implements 
 		this.upstreamProvider = upstreamProvider;
 	}
 
-	private CombinedDownloadTask<Void> download(final DownloadInfo info, final File target, String cachePool) {
+	private CombinedTask<Void> download(final DownloadInfo info, final File target, String cachePool) {
 		if (info == null || info.getUrl() == null) {
 			return null;
 		}
-		return CombinedDownloadTask.single(new FileDownloadTask(parseURI(info.getUrl()), target)
+		return CombinedTask.single(new FileDownloadTask(parseURI(info.getUrl()), target)
 				.andThen(new ResultProcessor<Void, Void>() {
 
 					@Override

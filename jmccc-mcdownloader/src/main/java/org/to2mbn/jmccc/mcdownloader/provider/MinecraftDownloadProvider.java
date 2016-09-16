@@ -2,7 +2,7 @@ package org.to2mbn.jmccc.mcdownloader.provider;
 
 import java.util.Set;
 import org.to2mbn.jmccc.mcdownloader.RemoteVersionList;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
 import org.to2mbn.jmccc.option.MinecraftDirectory;
 import org.to2mbn.jmccc.version.Asset;
 import org.to2mbn.jmccc.version.Library;
@@ -15,7 +15,7 @@ public interface MinecraftDownloadProvider {
 	 * 
 	 * @return a minecraft version list
 	 */
-	CombinedDownloadTask<RemoteVersionList> versionList();
+	CombinedTask<RemoteVersionList> versionList();
 
 	/**
 	 * Returns an asset index download task.
@@ -27,7 +27,7 @@ public interface MinecraftDownloadProvider {
 	 * @param version the minecraft version
 	 * @return the asset index
 	 */
-	CombinedDownloadTask<Set<Asset>> assetsIndex(MinecraftDirectory mcdir, Version version);
+	CombinedTask<Set<Asset>> assetsIndex(MinecraftDirectory mcdir, Version version);
 
 	/**
 	 * Returns a game jar download task.
@@ -40,7 +40,7 @@ public interface MinecraftDownloadProvider {
 	 * @param version the minecraft version
 	 * @return void
 	 */
-	CombinedDownloadTask<Void> gameJar(MinecraftDirectory mcdir, Version version);
+	CombinedTask<Void> gameJar(MinecraftDirectory mcdir, Version version);
 
 	/**
 	 * Returns a game version json download task.
@@ -53,7 +53,7 @@ public interface MinecraftDownloadProvider {
 	 * @param version the game version
 	 * @return the downloaded version's name
 	 */
-	CombinedDownloadTask<String> gameVersionJson(MinecraftDirectory mcdir, String version);
+	CombinedTask<String> gameVersionJson(MinecraftDirectory mcdir, String version);
 
 	/**
 	 * Returns a library download task.
@@ -66,7 +66,7 @@ public interface MinecraftDownloadProvider {
 	 * @param library the library to download
 	 * @return void
 	 */
-	CombinedDownloadTask<Void> library(MinecraftDirectory mcdir, Library library);
+	CombinedTask<Void> library(MinecraftDirectory mcdir, Library library);
 
 	/**
 	 * Returns an asset download task.
@@ -79,6 +79,6 @@ public interface MinecraftDownloadProvider {
 	 * @param asset the asset to download
 	 * @return void
 	 */
-	CombinedDownloadTask<Void> asset(MinecraftDirectory mcdir, Asset asset);
+	CombinedTask<Void> asset(MinecraftDirectory mcdir, Asset asset);
 
 }

@@ -1,12 +1,12 @@
 package org.to2mbn.jmccc.mcdownloader.provider.liteloader;
 
 import org.to2mbn.jmccc.internal.org.json.JSONObject;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
 
 public interface LiteloaderDownloadSource {
 
 	String getLiteloaderManifestUrl();
 
-	CombinedDownloadTask<JSONObject> liteloaderSnapshotVersionJson(LiteloaderVersion liteloader);
+	CombinedTask<JSONObject> liteloaderSnapshotVersionJson(LiteloaderVersion liteloader);
 
 }

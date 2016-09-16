@@ -2,10 +2,10 @@ package org.to2mbn.jmccc.mcdownloader;
 
 import java.util.Objects;
 import java.util.concurrent.Future;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask;
 import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloader;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask.CacheStrategy;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallback;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask.CacheStrategy;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallback;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.DownloadCallback;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 import org.to2mbn.jmccc.mcdownloader.provider.MinecraftDownloadProvider;
@@ -38,7 +38,7 @@ class MinecraftDownloaderImpl implements MinecraftDownloader {
 	}
 
 	@Override
-	public <T> Future<T> download(CombinedDownloadTask<T> task, CombinedDownloadCallback<T> callback) {
+	public <T> Future<T> download(CombinedTask<T> task, CombinedCallback<T> callback) {
 		return combinedDownloader.download(task, callback);
 	}
 
@@ -48,19 +48,19 @@ class MinecraftDownloaderImpl implements MinecraftDownloader {
 	}
 
 	@Override
-	public <T> Future<T> download(CombinedDownloadTask<T> task, CombinedDownloadCallback<T> callback, int tries) {
+	public <T> Future<T> download(CombinedTask<T> task, CombinedCallback<T> callback, int tries) {
 		return combinedDownloader.download(task, callback, tries);
 	}
 
 	@Override
-	public Future<Version> downloadIncrementally(MinecraftDirectory dir, String version, CombinedDownloadCallback<Version> callback, MinecraftDownloadOption... options) {
+	public Future<Version> downloadIncrementally(MinecraftDirectory dir, String version, CombinedCallback<Version> callback, DownloadOption... options) {
 		boolean checkLibrariesHash = false;
 		boolean checkAssetsHash = false;
 		boolean updateSnapshots = false;
 		AssetOption assetOption = null;
 		CacheOption cacheOption = null;
 
-		for (MinecraftDownloadOption option : options) {
+		for (DownloadOption option : options) {
 			if (option instanceof CacheOption) {
 				cacheOption = (CacheOption) option;
 
@@ -90,7 +90,7 @@ class MinecraftDownloaderImpl implements MinecraftDownloader {
 			}
 		}
 
-		CombinedDownloadTask<Version> task = new IncrementallyDownloadTask(downloadProvider, dir, version, checkLibrariesHash, checkAssetsHash, updateSnapshots, assetOption);
+		CombinedTask<Version> task = new IncrementallyDownloadTask(downloadProvider, dir, version, checkLibrariesHash, checkAssetsHash, updateSnapshots, assetOption);
 
 		if (cacheOption != null) {
 			task = processCacheOption(task, cacheOption);
@@ -100,8 +100,8 @@ class MinecraftDownloaderImpl implements MinecraftDownloader {
 	}
 
 	@Override
-	public Future<RemoteVersionList> fetchRemoteVersionList(CombinedDownloadCallback<RemoteVersionList> callback, CacheOption... options) {
-		CombinedDownloadTask<RemoteVersionList> task = downloadProvider.versionList();
+	public Future<RemoteVersionList> fetchRemoteVersionList(CombinedCallback<RemoteVersionList> callback, CacheOption... options) {
+		CombinedTask<RemoteVersionList> task = downloadProvider.versionList();
 		if (options.length != 0) {
 			// apply the last one
 			task = processCacheOption(task, options[options.length - 1]);
@@ -119,7 +119,7 @@ class MinecraftDownloaderImpl implements MinecraftDownloader {
 		return String.format("MinecraftDownloaderImpl [combinedDownloader=%s, downloadProvider=%s]", combinedDownloader, downloadProvider);
 	}
 
-	private <T> CombinedDownloadTask<T> processCacheOption(CombinedDownloadTask<T> task, CacheOption option) {
+	private <T> CombinedTask<T> processCacheOption(CombinedTask<T> task, CacheOption option) {
 		switch (option) {
 			case CACHE:
 				return task.cacheable(CacheStrategy.CACHEABLE);

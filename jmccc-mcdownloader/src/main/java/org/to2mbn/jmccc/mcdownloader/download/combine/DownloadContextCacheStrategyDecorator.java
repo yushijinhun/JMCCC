@@ -1,16 +1,16 @@
 package org.to2mbn.jmccc.mcdownloader.download.combine;
 
 import java.util.concurrent.Future;
-import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedDownloadTask.CacheStrategy;
-import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedDownloadCallback;
+import org.to2mbn.jmccc.mcdownloader.download.combine.CombinedTask.CacheStrategy;
+import org.to2mbn.jmccc.mcdownloader.download.concurrent.CombinedCallback;
 import org.to2mbn.jmccc.mcdownloader.download.concurrent.DownloadCallback;
 import org.to2mbn.jmccc.mcdownloader.download.tasks.DownloadTask;
 
-class DownloadContextCacheStrategyDecorator<T> extends CombinedDownloadContextDecorator<T> {
+class DownloadContextCacheStrategyDecorator<T> extends DownloadContextDecorator<T> {
 
 	private CacheStrategy strategy;
 
-	public DownloadContextCacheStrategyDecorator(CombinedDownloadContext<T> delegated, CacheStrategy strategy) {
+	public DownloadContextCacheStrategyDecorator(DownloadContext<T> delegated, CacheStrategy strategy) {
 		super(delegated);
 		this.strategy = strategy;
 	}
@@ -36,8 +36,8 @@ class DownloadContextCacheStrategyDecorator<T> extends CombinedDownloadContextDe
 	}
 
 	@Override
-	public <R> Future<R> submit(CombinedDownloadTask<R> task, CombinedDownloadCallback<R> callback, boolean fatal) throws InterruptedException {
-		CombinedDownloadTask<R> processed;
+	public <R> Future<R> submit(CombinedTask<R> task, CombinedCallback<R> callback, boolean fatal) throws InterruptedException {
+		CombinedTask<R> processed;
 		switch (strategy) {
 			case CACHEABLE:
 				if (task.getCacheStrategy() == CacheStrategy.DEFAULT) {
