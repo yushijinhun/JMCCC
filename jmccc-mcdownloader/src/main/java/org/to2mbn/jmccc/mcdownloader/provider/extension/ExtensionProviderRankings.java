@@ -10,6 +10,7 @@ package org.to2mbn.jmccc.mcdownloader.provider.extension;
  * 2. 3rd-party processing (eg. forge/liteloader)
  * 3. download from mirrors (eg. download from cdn)
  * 4. download from origin (eg. download from mojang)
+ * 5. rectify
  * </pre>
  * 
  * Each of the above phases has three steps: pre-process, process, post-process.
@@ -40,22 +41,24 @@ public final class ExtensionProviderRankings {
 		return (phases * 3 + steps) * _step_length + _step_length / 2;
 	}
 
-	// @formatter:off
-	public static final int PRE_PROCESS_METADATA 		= _ranking(3, 2);
-	public static final int PROCESS_METADATA 			= _ranking(3, 1);
-	public static final int POST_PROCESS_METADATA 		= _ranking(3, 0);
+	public static final int PRE_PROCESS_METADATA = _ranking(4, 2);
+	public static final int PROCESS_METADATA = _ranking(4, 1);
+	public static final int POST_PROCESS_METADATA = _ranking(4, 0);
 
-	public static final int PRE_PROCESS_3RD_PARTY 		= _ranking(2, 2);
-	public static final int PROCESS_3RD_PARTY 			= _ranking(2, 1);
-	public static final int POST_PROCESS_3RD_PARTY 		= _ranking(2, 0);
+	public static final int PRE_PROCESS_3RD_PARTY = _ranking(3, 2);
+	public static final int PROCESS_3RD_PARTY = _ranking(3, 1);
+	public static final int POST_PROCESS_3RD_PARTY = _ranking(3, 0);
 
-	public static final int PRE_PROCESS_MIRROR 			= _ranking(1, 2);
-	public static final int PROCESS_MIRROR 				= _ranking(1, 1);
-	public static final int POST_PROCESS_MIRROR 		= _ranking(1, 0);
+	public static final int PRE_PROCESS_MIRROR = _ranking(2, 2);
+	public static final int PROCESS_MIRROR = _ranking(2, 1);
+	public static final int POST_PROCESS_MIRROR = _ranking(2, 0);
 
-	public static final int PRE_PROCESS_ORIGIN 			= _ranking(0, 2);
-	public static final int PROCESS_ORIGIN 				= _ranking(0, 1);
-	public static final int POST_PROCESS_ORIGIN 		= _ranking(0, 0);
-	// @formatter:on
+	public static final int PRE_PROCESS_ORIGIN = _ranking(1, 2);
+	public static final int PROCESS_ORIGIN = _ranking(1, 1);
+	public static final int POST_PROCESS_ORIGIN = _ranking(1, 0);
+
+	public static final int PRE_PROCESS_RECTIFY = _ranking(0, 2);
+	public static final int PROCESS_RECTIFY = _ranking(0, 1);
+	public static final int POST_PROCESS_RECTIFY = _ranking(0, 0);
 
 }
